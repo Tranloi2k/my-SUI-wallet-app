@@ -22,6 +22,12 @@ To get started with the application, follow these steps:
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Set up .env
+
+Create a .env file in the root of your project and add the following environment variables:
+REACT_APP_SUI_NET=testnet
+REACT_APP_SUI_PRIVATE_KEY=your_private_key_here
+
 ## Available Scripts
 
 In the project directory, you can run:

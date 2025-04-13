@@ -13,7 +13,7 @@ const TransactionComponent = () => {
   const [executor, setExecutor] = useState<SerialTransactionExecutor>();
   const tx1 = new Transaction();
   const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
@@ -36,14 +36,14 @@ const TransactionComponent = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (recipient && amount > 0) {
+    if (recipient && parseFloat(amount) > 0) {
       setShowConfirm(true);
     }
   };
 
   const handleConfirm = () => {
     setShowConfirm(false);
-    sendToken(recipient, amount);
+    sendToken(recipient, parseFloat(amount));
   };
 
   const handleCancel = () => {
@@ -53,6 +53,22 @@ const TransactionComponent = () => {
   const closeNotification = () => {
     setNotification(null);
     setIsSuccess(null);
+  };
+
+  const formatAmount = (value: string) => {
+    const parts = value.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (parts[1] && parts[1].length > 9) {
+      parts[1] = parts[1].slice(0, 9);
+    }
+    return parts.join(".");
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/,/g, "");
+    if (!isNaN(Number(value)) || value === "") {
+      setAmount(formatAmount(value));
+    }
   };
 
   const sendToken = async (address: string, amount: number) => {
@@ -121,11 +137,10 @@ const TransactionComponent = () => {
             Amount
           </label>
           <input
-            type="number"
+            type="text"
             value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            onChange={handleAmountChange}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            min="0"
             required
           />
         </div>
