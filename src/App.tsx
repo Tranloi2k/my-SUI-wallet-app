@@ -10,11 +10,9 @@ import ListTokenComponent from "./components/ListTokenComponent";
 import TransactionComponent from "./components/TransactionComponent";
 import MainLayout from "./layout/MainLayout";
 import { CoinMetaDataProvider } from "./CoinMetaDataContext";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
-const defaultNetwork = ["testnet", "mainnet", "devnet", undefined];
-
-const networkFromEnv = process.env.REACT_APP_SUI_NET;
 
 const networks = {
   devnet: { url: getFullnodeUrl("devnet") },
@@ -23,18 +21,31 @@ const networks = {
 };
 
 function App() {
-  const validNetwork = defaultNetwork.includes(networkFromEnv)
-    ? (networkFromEnv as "testnet" | "mainnet" | "devnet")
-    : "testnet";
+  const [selectedNetwork, setSelectedNetwork] = useState<
+    "testnet" | "mainnet" | "devnet"
+  >("testnet");
+
+  const handleNetworkChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedNetwork(event.target.value as "testnet" | "mainnet" | "devnet");
+  };
 
   return (
     <CoinMetaDataProvider>
       <QueryClientProvider client={queryClient}>
-        <SuiClientProvider networks={networks} defaultNetwork={validNetwork}>
+        <SuiClientProvider networks={networks} defaultNetwork={selectedNetwork}>
           <WalletProvider>
             <div className="App p-6 bg-gradient-to-r from-sky-500 from-10% to-cyan-200 to-90% h-auto min-h-[100vh]">
               <MainLayout>
-                <header className="App-header flex w-full justify-end">
+                <header className="App-header flex w-full justify-between items-center">
+                  <select
+                    value={selectedNetwork}
+                    onChange={handleNetworkChange}
+                    className="bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2 transition-colors duration-200 hover:border-blue-400"
+                  >
+                    <option value="testnet">Testnet</option>
+                    <option value="mainnet">Mainnet</option>
+                    <option value="devnet">Devnet</option>
+                  </select>
                   <ConnectButton />
                 </header>
                 <TransactionComponent />
