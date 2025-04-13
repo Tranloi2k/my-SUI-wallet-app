@@ -1,17 +1,22 @@
-import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
-import { useState } from "react";
+import {
+  useCurrentAccount,
+  useSuiClientQueries,
+  useSuiClientQuery,
+} from "@mysten/dapp-kit";
+import { useEffect, useState } from "react";
 import SuiIcon from "../assets/SuiIcon";
+import { useCoinMetaData } from "../CoinMetaDataContext";
 
-const MyComponent = () => {
+const ListTokenComponent = () => {
   const account = useCurrentAccount();
-  const [tokenList, setTokenList] = useState<any>([]);
+  const [formattedTokens, setFormattedTokens] = useState<any[]>([]);
+  const { setUpCoinMetaData } = useCoinMetaData();
 
   const {
     data: tokensData,
     isPending,
     isError,
     error,
-    refetch,
   } = useSuiClientQuery(
     "getAllBalances",
     {
@@ -22,21 +27,65 @@ const MyComponent = () => {
     }
   );
 
-  const { data } = useSuiClientQuery("getCoinMetadata", {
-    coinType: "0x2::sui::SUI",
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const tokenMetadataQueries = useSuiClientQueries({
+    queries: (tokensData || [])
+      .filter(
+        (coin, index, self) =>
+          index === self.findIndex((c) => c.coinType === coin.coinType)
+      )
+      .map((coin) => ({
+        method: "getCoinMetadata" as const,
+        params: { coinType: coin.coinType },
+      })),
+    combine: (result: any) => {
+      return {
+        data: result.map((res: { data: any }) => res.data),
+        isSuccess: result.every((res: any) => res.isSuccess),
+        isPending: result.some((res: any) => res.isPending),
+        isError: result.some((res: any) => res.isError),
+      };
+    },
   });
 
+  // const tokenMetadata = tokenMetadataQueries.map((item: { data: any }) => {
+  //   return item.data;
+  // });
+
   // Format dữ liệu token
-  const formattedTokens =
-    tokensData?.map((token) => ({
-      ...token,
-      formattedBalance: formatBalance(BigInt(token.totalBalance), 9), // SUI có 9 decimals
-      metadata: {
-        symbol: token.coinType === "0x2::sui::SUI" ? "SUI" : "TOKEN",
-        name: token.coinType === "0x2::sui::SUI" ? "Sui" : "Unknown Token",
-        iconUrl: <SuiIcon />,
-      },
-    })) || [];
+  useEffect(() => {
+    console.log(tokenMetadataQueries.data);
+    const tokenMetadata = tokenMetadataQueries.data;
+    if (tokenMetadata.every((item: any) => item !== undefined)) {
+      console.log(tokenMetadata);
+      const formattedTk =
+        tokensData?.map((token, index) => {
+          if (!token) return null;
+          const item = tokenMetadata[index];
+          return {
+            ...token,
+            formattedBalance: formatBalance(
+              BigInt(token.totalBalance),
+              item?.decimals
+            ), // SUI có 9 decimals
+            metadata: {
+              symbol: item.symbol,
+              name: item.name || item.symbol,
+              iconUrl:
+                token.coinType === "0x2::sui::SUI" ? (
+                  <SuiIcon />
+                ) : (
+                  item.symbol[0]
+                ),
+            },
+          };
+        }) || [];
+      setUpCoinMetaData(formattedTk);
+
+      setFormattedTokens(formattedTk);
+    }
+  }, [tokensData, tokenMetadataQueries, setUpCoinMetaData]);
 
   if (!account) {
     return (
@@ -85,7 +134,7 @@ const MyComponent = () => {
             >
               {/* Token Icon */}
               {token.metadata.iconUrl ? (
-                <div className="w-[28px] h-[28px] rounded-[50%] bg-blue-400 flex justify-center items-center">
+                <div className="w-[28px] h-[28px] rounded-[50%] bg-blue-400 flex justify-center text-white items-center">
                   {token.metadata.iconUrl}
                 </div>
               ) : (
@@ -107,7 +156,7 @@ const MyComponent = () => {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 truncate">
-                  {token.coinType.split("::")[0]}
+                  {token.coinType.split("::")[-1]}
                 </p>
               </div>
 
@@ -115,7 +164,7 @@ const MyComponent = () => {
               <div className="text-right">
                 <p className="font-semibold">{token.formattedBalance}</p>
                 <p className="text-sm text-gray-500">
-                  ≈ ${(parseFloat(token.formattedBalance) * 0.5).toFixed(2)}{" "}
+                  ≈ ${(parseFloat(token.formattedBalance) * 0.5).toFixed(5)}{" "}
                   {/* Giả sử 1 SUI = $0.5 */}
                 </p>
               </div>
@@ -138,4 +187,4 @@ export function formatBalance(balance: bigint, decimals: number): string {
     : whole.toString();
 }
 
-export default MyComponent;
+export default ListTokenComponent;

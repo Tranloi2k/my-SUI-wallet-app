@@ -1,3 +1,24 @@
+# My Wallet Demo
+
+My Wallet Demo is a React application built using Create React App. It demonstrates the integration with the Sui blockchain, allowing users to view and manage their tokens. The application is designed to provide a seamless experience for interacting with blockchain assets.
+
+## Features
+
+- **View Tokens**: Users can view a list of tokens in their wallet, including details such as token name, symbol, and balance.
+- **Send Tokens**: Users can send tokens to other addresses with a simple and intuitive interface.
+- **Transaction Confirmation**: Before sending tokens, users are prompted with a confirmation dialog to ensure the transaction details are correct.
+- **Notifications**: Users receive notifications for successful and failed transactions, with color-coded messages for easy identification.
+- **Responsive Design**: The application is designed to be responsive and works well on both desktop and mobile devices.
+
+## Getting Started
+
+To get started with the application, follow these steps:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/my-wallet-demo.git
+   ```
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
